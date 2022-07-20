@@ -9,7 +9,7 @@ This directory contains the code for SimplePIR and DoublePIR, two high-throughpu
 The `pir/` directory contains the code for SimplePIR and DoublePIR. In particular, it contains the files:
 - `pir.go`, which defines the interface for a PIR with preprocessing scheme, and `simple_pir.go` and `double_pir.go`, which implement this interface.
 - `pir_test.go`, which contains correctness tests and performance benchmarks for the SimplePIR and DoublePIR implementations. 
-- `pir.h` and `pir.c`, which implement matrix multiplication routines.
+- `pir.h` and `pir.c`, which implement matrix multiplication and transposition routines.
 - `matrix.go`, which implements other operations on matrices.
 - `database.go`, which implements operations on databases to transform them to the format used by SimplePIR and DoublePIR.
 - `params.csv`, which contains the LWE parameters used in this work, and `params.go`, which selects the appropriate LWE parameters based on the PIR database dimensions.
