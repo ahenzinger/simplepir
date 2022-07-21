@@ -1,20 +1,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker  
-from matplotlib.ticker import StrMethodFormatter
-from matplotlib.transforms import ScaledTranslation
-import matplotlib.patches as mpatches
 from matplotlib.ticker import FuncFormatter
-from matplotlib.patches import Ellipse
 import numpy as np
 import argparse
 import csv
-
-#import custom_style
-#import tufte
-
-def gbs(x, pos=None):
-    'The two args are the value and tick position'
-    return '%.1f GB/s' % (x)
 
 plt.style.use('seaborn-paper')
 
@@ -41,14 +30,9 @@ args = parser.parse_args()
 
 def throughput_with_batching(args):
     data = {}
-
     fig, ax = plt.subplots()
-    ax.yaxis.set_minor_formatter(gbs)
-    ax.yaxis.set_major_formatter(gbs)
-    ax.xaxis.set_minor_formatter(mticker.ScalarFormatter())
-    ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
-
     ind = 0
+
     for csvfile, scheme in zip(args.file, args.name):
         print(scheme)
         data[scheme] = {}
@@ -69,15 +53,14 @@ def throughput_with_batching(args):
                 data[scheme]['tput'].append(good_tput)
                 data[scheme]['dev'].append(dev)
 
-        plt.scatter(data[scheme]['batch_sz'], data[scheme]['tput'], label="_"+scheme, marker='.')#c=colors[ind])
-        line, = plt.plot(data[scheme]['batch_sz'], data[scheme]['tput'], label=scheme, marker='.')#,c=colors[ind])
+        plt.scatter(data[scheme]['batch_sz'], data[scheme]['tput'], label="_"+scheme, marker='.')
+        line, = plt.plot(data[scheme]['batch_sz'], data[scheme]['tput'], label=scheme, marker='.')
         plt.fill_between(data[scheme]['batch_sz'], 
                          [x-y for (x,y) in zip(data[scheme]['tput'], data[scheme]['dev'])], 
                          [x+y for (x,y) in zip(data[scheme]['tput'], data[scheme]['dev'])], 
                          label="_"+scheme, alpha=0.5, facecolor=line.get_color())
         ind += 1
 
-    #plt.legend()
     plt.xlabel("Num. queries per batch")
     plt.ylabel("Throughput (GiB/s)")
     #plt.title("Expected PIR throughput, with increasing batching sizes")
