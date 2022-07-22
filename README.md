@@ -72,7 +72,7 @@ For an example of how to call the SimplePIR and DoublePIR methods from code, see
 ```
 @misc{simplepir,
     author =  {Alexandra Henzinger and Matthew M. Hong and Henry Corrigan-Gibbs and Sarah Meiklejohn and Vinod Vaikuntanathan},
-    title  =  {Simple and Fast Single-Server Private Information Retrieval},
+    title  =  {One Server for the Price of Two: Simple and Fast Single-Server Private Information Retrieval},
     year   =  {2022},
 }
 ```
