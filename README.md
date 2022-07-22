@@ -6,7 +6,7 @@ This repository contains the code for SimplePIR and DoublePIR, two high-throughp
 
 > SimplePIR is a single-server PIR scheme, whose security holds under the learning-with-errors assumption. To answer a client’s PIR query, the SimplePIR server performs one 32-bit multiplication and one 32-bit addition per database byte. SimplePIR achieves 6.5 GB/s/core server throughput, which is 7% faster than the fastest two-server PIR schemes (that require non-colluding servers). SimplePIR has relatively large communication costs: to make queries to a 1 GB database, the client must download a 124 MB “hint” about the database contents; thereafter, the client may make an unbounded number of queries, each requiring 242 KB of communication. We present a second single-server scheme, DoublePIR, that shrinks the hint to 16 MB at the cost of slightly higher per-query communication (345 KB) and slightly lower throughput (5.2 GB/s/core).
 
-SimplePIR and DoublePIR performance, compared to other single-server PIR schemes, on a 1 GB database:
+SimplePIR and DoublePIR's performance, compared to other single-server PIR schemes, on a 1 GB database:
 > <img src="performance.png" width="500">
 
 ## Overview
