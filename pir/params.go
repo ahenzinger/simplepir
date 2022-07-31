@@ -1,4 +1,4 @@
-package main
+package pir
 
 import "math"
 import "encoding/csv"

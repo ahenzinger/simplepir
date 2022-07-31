@@ -1,4 +1,4 @@
-package main
+package pir
 
 // Defines the interface for PIR with preprocessing schemes
 

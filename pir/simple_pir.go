@@ -1,4 +1,4 @@
-package main
+package pir
 
 // #cgo CFLAGS: -O3 -march=native -msse4.1 -maes -mavx2 -mavx
 // #include "pir.h"
