@@ -1,12 +1,13 @@
 package pir
 
 import "math"
-import "encoding/csv"
-import "os"
+import "strings"
 import "strconv"
 import "fmt"
+import _ "embed"
 
-const filename = "params.csv"
+//go:embed params.csv
+var lwe_params string
 
 type Params struct {
 	n     uint64  // LWE secret dimension
@@ -45,19 +46,9 @@ func (p *Params) PickParams(doublepir bool, samples ...uint64) {
 		}
 	}
 
-	f, err := os.Open(filename)
-	if err != nil {
-		panic("Error opening csv file")
-	}
-	defer f.Close()
-
-	records, err := csv.NewReader(f).ReadAll()
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		panic("Error reading csv file")
-	}
-
-	for _, line := range records[1:] {
+	lines := strings.Split(lwe_params, "\n")
+	for _, l := range lines[1:] {
+		line := strings.Split(l, ",")
 		logn, _ := strconv.ParseUint(line[0], 10, 64)
 		logm, _ := strconv.ParseUint(line[1], 10, 64)
 		logq, _ := strconv.ParseUint(line[2], 10, 64)
