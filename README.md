@@ -65,7 +65,7 @@ python3 plot.py -p batch_tput -f ../pir/simple-batch.log ../pir/double-batch.log
 cd ..
 ```
 
-For an example of how to call the SimplePIR and DoublePIR methods from code, see the `RunPIR` function in the file `pir/pir.go`.
+For an example of how to call the SimplePIR and DoublePIR methods from code, see the `RunPIR` function in the file `pir/pir.go`. To call the SimplePIR and DoublePIR methods from Go code, import the package `"github.com/ahenzinger/simplepir/pir"`.
 
 ## Citation
 
