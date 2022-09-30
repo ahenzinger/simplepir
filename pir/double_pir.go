@@ -68,7 +68,7 @@ func (pi *DoublePIR) GetBW(info DBinfo, p Params) {
 func (pi *DoublePIR) Init(info DBinfo, p Params) State {
 	A1 := MatrixRand(p.m, p.n, p.logq, 0)
 	A2 := MatrixRand(p.l/info.x, p.n, p.logq, 0)
-
+	
 	return MakeState(A1, A2)
 }
 
@@ -161,8 +161,8 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 		if batch == int(num_queries-1) {
 			batch_sz = DB.data.rows - last
 		}
-		a := MatrixMulVecSub(DB.data.Rows(last, batch_sz),
-			q1, p.p/2, DB.info.basis, DB.info.squishing)
+		a := MatrixMulVecPacked(DB.data.Rows(last, batch_sz),
+			                q1, DB.info.basis, DB.info.squishing)
 		a1.Concat(a)
 		last += batch_sz
 	}
@@ -177,7 +177,7 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 	for _, q := range query.data {
 		for j := uint64(0); j < DB.info.ne/DB.info.x; j++ {
 			q2 := q.data[1+j]
-			a2 := MatrixMulVecSub(H1, q2, p.p/2, 10, 3)
+			a2 := MatrixMulVecPacked(H1, q2, 10, 3)
 			h2 := MatrixMulVec(a1, q2)
 
 			msg.data = append(msg.data, a2)
@@ -188,11 +188,26 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 	return msg
 }
 
-func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg,
+func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg, query Msg,
 	answer Msg, client State, p Params, info DBinfo) uint64 {
 	H2 := offline.data[0]
 	h1 := answer.data[0]
 	secret1 := client.data[0]
+
+	ratio := p.p/2
+	val1 := uint64(0)
+	for j := uint64(0); j<p.m; j++ {
+		val1 += ratio*query.data[0].Get(j,0)
+	}
+	val1 %= (1<<p.logq)
+	val1 = (1<<p.logq)-val1
+
+	val2 := uint64(0)
+	for j := uint64(0); j<p.l/info.x; j++ {
+		val2 += ratio*query.data[1].Get(j,0)
+	}
+	val2 %= (1<<p.logq)
+	val2 = (1<<p.logq)-val2
 
 	offset := (info.ne / info.x * 2) * batch_index // for batching
 	var vals []uint64
@@ -203,6 +218,7 @@ func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg,
 
 		for j := uint64(0); j < info.x; j++ {
 			state := a2.RowsDeepCopy(j*p.n*p.delta(), p.n*p.delta())
+			state.Add(val2)
 			state.Concat(h2.Rows(j*p.delta(), p.delta()))
 
 			hint := H2.RowsDeepCopy(j*p.n*p.delta(), p.n*p.delta())
@@ -213,7 +229,7 @@ func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg,
 			state.Round(p)
 			state.Contract(p.p, p.delta())
 
-			noised := uint64(state.data[p.n])
+			noised := uint64(state.data[p.n]) + val1
 			for l := uint64(0); l < p.n; l++ {
 				noised -= uint64(secret1.data[l] * state.data[l])
 				noised = noised % (1 << p.logq)

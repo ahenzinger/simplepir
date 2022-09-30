@@ -164,7 +164,7 @@ func MatrixMulVec(a *Matrix, b *Matrix) *Matrix {
 		panic("Second argument is not a vector")
 	}
 
-	out := MatrixNew(a.rows, 1)
+	out := MatrixNew(a.rows + 8, 1)
 
 	outPtr := (*C.Elem)(&out.data[0])
 	aPtr := (*C.Elem)(&a.data[0])
@@ -174,10 +174,11 @@ func MatrixMulVec(a *Matrix, b *Matrix) *Matrix {
 
 	C.matMulVec(outPtr, aPtr, bPtr, aRows, aCols)
 
+	out.DropLastRows(8)
 	return out
 }
 
-func MatrixMulVecSub(a *Matrix, b *Matrix, ratio, basis, compression uint64) *Matrix {
+func MatrixMulVecPacked(a *Matrix, b *Matrix, basis, compression uint64) *Matrix {
 	if a.cols*compression != b.rows {
 		fmt.Printf("%d-by-%d vs. %d-by-%d\n", a.rows, a.cols, b.rows, b.cols)
 		panic("Dimension mismatch")
@@ -195,7 +196,7 @@ func MatrixMulVecSub(a *Matrix, b *Matrix, ratio, basis, compression uint64) *Ma
 	aPtr := (*C.Elem)(&a.data[0])
 	bPtr := (*C.Elem)(&b.data[0])
 
-	C.matMulVecSub(outPtr, aPtr, bPtr, C.size_t(a.rows), C.size_t(a.cols), C.size_t(ratio))
+	C.matMulVecPacked(outPtr, aPtr, bPtr, C.size_t(a.rows), C.size_t(a.cols))
 
 	return out
 }

@@ -177,7 +177,7 @@ func TestSimplePirLongRowBatch(t *testing.T) {
 
 // Test DoublePIR correctness on DB with short entries.
 func TestDoublePir(t *testing.T) {
-	N := uint64(1 << 20)
+	N := uint64(1 << 28)
 	d := uint64(3)
 	pir := DoublePIR{}
 	p := pir.PickParams(N, d, SEC_PARAM, LOGQ)

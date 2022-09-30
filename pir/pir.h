@@ -11,5 +11,5 @@ void matMul(Elem *out, const Elem *a, const Elem *b,
 void matMulVec(Elem *out, const Elem *a, const Elem *b,
     size_t aRows, size_t aCols);
 
-void matMulVecSub(Elem *out, const Elem *a, const Elem *b,
-    size_t aRows, size_t aCols, size_t sub);
+void matMulVecPacked(Elem *out, const Elem *a, const Elem *b,
+    size_t aRows, size_t aCols);

@@ -108,14 +108,14 @@ func (pi *SimplePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 	batch_sz := DB.data.rows / num_queries // how many rows of the database each query in the batch maps to
 
 	last := uint64(0)
+
 	// Run SimplePIR's answer routine for each query in the batch
 	for batch, q := range query.data {
 		if batch == int(num_queries-1) {
 			batch_sz = DB.data.rows - last
 		}
-		a := MatrixMulVecSub(DB.data.Rows(last, batch_sz),
+		a := MatrixMulVecPacked(DB.data.Rows(last, batch_sz),
 			q.data[0],
-			p.p/2, // map the Z_p entries from [0, p] to [-p/2, p/2]
 			DB.info.basis,
 			DB.info.squishing)
 		ans.Concat(a)
@@ -125,11 +125,19 @@ func (pi *SimplePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 	return MakeMsg(ans)
 }
 
-func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, answer Msg,
+func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, query Msg, answer Msg,
 	client State, p Params, info DBinfo) uint64 {
 	secret := client.data[0]
 	H := offline.data[0]
 	ans := answer.data[0]
+
+	ratio := p.p/2
+	offset := uint64(0);
+	for j := uint64(0); j<p.m; j++ {
+        	offset += ratio*query.data[0].Get(j,0)
+	}
+	offset %= (1 << p.logq)
+	offset = (1 << p.logq)-offset
 
 	row := i / p.m
 	interm := MatrixMul(H, secret)
@@ -138,8 +146,8 @@ func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, answer M
 	var vals []uint64
 	// Recover each Z_p element that makes up the desired database entry
 	for j := row * info.ne; j < (row+1)*info.ne; j++ {
-		noised := ans.data[j]
-		denoised := p.Round(uint64(noised))
+		noised := uint64(ans.data[j]) + offset
+		denoised := p.Round(noised)
 		vals = append(vals, denoised)
 		//fmt.Printf("Reconstructing row %d: %d\n", j, denoised)
 	}
