@@ -26,7 +26,7 @@ type PIR interface {
 
 	Answer(DB *Database, query MsgSlice, server State, shared State, p Params) Msg
 
-	Recover(i uint64, batch_index uint64, offline Msg, query Msg, answer Msg, client State,
+	Recover(i uint64, batch_index uint64, offline Msg, query Msg, answer Msg, shared State, client State,
 		p Params, info DBinfo) uint64
 
 	Reset(DB *Database, p Params) // reset DB to its correct state, if modified during execution
@@ -147,7 +147,7 @@ func RunPIR(pi PIR, DB *Database, p Params, i []uint64) (float64, float64) {
 	for index, _ := range i {
 		index_to_query := i[index] + uint64(index)*batch_sz
 		val := pi.Recover(index_to_query, uint64(index), offline_download, 
-		                  query.data[index], answer,
+		                  query.data[index], answer, shared_state,
 			          client_state[index], p, DB.info)
 
 		if DB.GetElem(index_to_query) != val {

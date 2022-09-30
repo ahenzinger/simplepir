@@ -126,7 +126,7 @@ func (pi *SimplePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 }
 
 func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, query Msg, answer Msg,
-	client State, p Params, info DBinfo) uint64 {
+	shared State, client State, p Params, info DBinfo) uint64 {
 	secret := client.data[0]
 	H := offline.data[0]
 	ans := answer.data[0]

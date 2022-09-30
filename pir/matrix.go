@@ -266,6 +266,32 @@ func (m *Matrix) Expand(mod uint64, delta uint64) {
 	m.data = n.data
 }
 
+func (m *Matrix) TransposeAndExpandAndConcatCols(mod uint64, delta uint64, concat uint64) {
+	if m.rows % concat != 0 {
+		panic("Bad input!")
+	}
+
+        n := MatrixNew(m.cols*delta*concat, m.rows/concat)
+        modulus := C.Elem(mod)
+
+        for j := uint64(0); j < m.rows; j++ {
+                for i := uint64(0); i < m.cols; i++ {
+                        val := m.data[i+j*m.cols]
+                        for f := uint64(0); f < delta; f++ {
+                                new_val := val % modulus
+				r := (i*delta+f) + m.cols*delta*(j % concat)
+				c := j / concat
+                                n.data[r*n.cols+c] = new_val
+                                val /= modulus
+                        }
+                }
+        }
+
+        m.cols = n.cols
+        m.rows = n.rows
+        m.data = n.data
+}
+
 // Computes the inverse operations of Expand(.)
 func (m *Matrix) Contract(mod uint64, delta uint64) {
 	n := MatrixZeros(m.rows/delta, m.cols)

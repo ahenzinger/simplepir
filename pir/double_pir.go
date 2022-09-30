@@ -167,18 +167,16 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 		last += batch_sz
 	}
 
-	a1.Transpose()
-	a1.Expand(p.p, p.delta())
-	a1.ConcatCols(DB.info.x)
-
+	a1.TransposeAndExpandAndConcatCols(p.p, p.delta(), DB.info.x)
 	h1 := MatrixMul(a1, A2)
+	a1.Squish(10, 3)
 	msg := MakeMsg(h1)
 
 	for _, q := range query.data {
 		for j := uint64(0); j < DB.info.ne/DB.info.x; j++ {
 			q2 := q.data[1+j]
 			a2 := MatrixMulVecPacked(H1, q2, 10, 3)
-			h2 := MatrixMulVec(a1, q2)
+			h2 := MatrixMulVecPacked(a1, q2, 10, 3)
 
 			msg.data = append(msg.data, a2)
 			msg.data = append(msg.data, h2)
@@ -189,9 +187,9 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 }
 
 func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg, query Msg,
-	answer Msg, client State, p Params, info DBinfo) uint64 {
+	answer Msg, shared State, client State, p Params, info DBinfo) uint64 {
 	H2 := offline.data[0]
-	h1 := answer.data[0]
+	h1 := answer.data[0].RowsDeepCopy(0, answer.data[0].rows) // deep copy whole matrix 
 	secret1 := client.data[0]
 
 	ratio := p.p/2
@@ -209,12 +207,30 @@ func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg, query Ms
 	val2 %= (1<<p.logq)
 	val2 = (1<<p.logq)-val2
 
+	A2 := shared.data[1]
+	if (A2.cols != p.n) || (h1.cols != p.n) {
+		panic("Should not happen!")
+	}
+	for j1 := uint64(0); j1<p.n; j1++ {
+		val3 := uint64(0)
+	        for j2 := uint64(0); j2<A2.rows; j2++ {
+			val3 += ratio*A2.Get(j2,j1)
+		}
+		val3 %= (1<<p.logq)
+		val3 = (1<<p.logq)-val3
+		v := C.Elem(val3)
+		for k := uint64(0); k<h1.rows; k++ {
+                	h1.data[k*h1.cols+j1] += v
+		}
+	}
+
 	offset := (info.ne / info.x * 2) * batch_index // for batching
 	var vals []uint64
 	for i := uint64(0); i < info.ne/info.x; i++ {
 		a2 := answer.data[1+2*i+offset]
 		h2 := answer.data[2+2*i+offset]
 		secret2 := client.data[1+i]
+		h2.Add(val2)
 
 		for j := uint64(0); j < info.x; j++ {
 			state := a2.RowsDeepCopy(j*p.n*p.delta(), p.n*p.delta())
