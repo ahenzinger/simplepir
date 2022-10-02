@@ -68,7 +68,7 @@ func (pi *DoublePIR) GetBW(info DBinfo, p Params) {
 func (pi *DoublePIR) Init(info DBinfo, p Params) State {
 	A1 := MatrixRand(p.m, p.n, p.logq, 0)
 	A2 := MatrixRand(p.l/info.x, p.n, p.logq, 0)
-	
+
 	return MakeState(A1, A2)
 }
 
@@ -167,9 +167,10 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 		last += batch_sz
 	}
 
-	a1.TransposeAndExpandAndConcatCols(p.p, p.delta(), DB.info.x)
-	h1 := MatrixMul(a1, A2)
-	a1.Squish(10, 3)
+	a1.TransposeAndExpandAndConcatColsAndSquish(p.p, p.delta(), DB.info.x, 10, 3)
+	//a1.TransposeAndExpandAndConcatCols(p.p, p.delta(), DB.info.x)
+	//a1.Squish(10, 3)
+        h1 := MatrixMulPacked(a1, A2, 10, 3)
 	msg := MakeMsg(h1)
 
 	for _, q := range query.data {

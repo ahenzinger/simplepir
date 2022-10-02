@@ -20,6 +20,23 @@ void matMul(Elem *out, const Elem *a, const Elem *b,
   }
 }
 
+void matMulPacked(Elem *out, const Elem *a, const Elem *b,
+    size_t aRows, size_t aCols, size_t bCols)
+{
+  Elem val;
+  for (size_t i = 0; i < aRows; i += 1) {
+    for (size_t k = 0; k < aCols; k += 1) {
+
+      for (size_t j = 0; j < bCols; j++) {
+        for (int m = 0; m < COMPRESSION; m++) {
+	  val = (a[aCols*i+k] >> (m*BASIS)) & MASK;
+	  out[bCols*i+j] += val*b[(k*COMPRESSION+m)*bCols+j];
+	}
+      }
+    }
+  }
+}
+
 void matMulVec(Elem *out, const Elem *a, const Elem *b,
     size_t aRows, size_t aCols)
 {

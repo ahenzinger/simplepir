@@ -155,6 +155,42 @@ func MatrixMul(a *Matrix, b *Matrix) *Matrix {
 	return out
 }
 
+func MatrixMulPacked(a *Matrix, b *Matrix, basis, compression uint64) *Matrix {
+        if b.cols == 1 {
+                return MatrixMulVecPacked(a, b, basis, compression)
+        }
+        if (a.cols*compression < b.rows) || (a.cols*compression > b.rows+compression) {
+                fmt.Printf("%d-by-%d vs. %d-by-%d\n", a.rows, a.cols, b.rows, b.cols)
+                panic("Dimension mismatch")
+        }
+        if compression != 3 && basis != 10 {
+                panic("Must use hard-coded values!")
+        }
+
+        out := MatrixZeros(a.rows, b.cols)
+
+	added := false
+	if b.rows % 3 != 0 {
+		added = true
+		b.Concat(MatrixZeros(3, b.cols))
+	}
+
+        outPtr := (*C.Elem)(&out.data[0])
+        aPtr := (*C.Elem)(&a.data[0])
+        bPtr := (*C.Elem)(&b.data[0])
+        aRows := C.size_t(a.rows)
+        aCols := C.size_t(a.cols)
+        bCols := C.size_t(b.cols)
+
+        C.matMulPacked(outPtr, aPtr, bPtr, aRows, aCols, bCols)
+
+	if added {
+		b.DropLastRows(3)
+	}
+
+	return out
+}
+
 func MatrixMulVec(a *Matrix, b *Matrix) *Matrix {
 	if (a.cols != b.rows) && (a.cols+1 != b.rows) && (a.cols+2 != b.rows) { // do not require eact match because of DB compression
 		fmt.Printf("%d-by-%d vs. %d-by-%d\n", a.rows, a.cols, b.rows, b.cols)
@@ -164,7 +200,7 @@ func MatrixMulVec(a *Matrix, b *Matrix) *Matrix {
 		panic("Second argument is not a vector")
 	}
 
-	out := MatrixNew(a.rows + 8, 1)
+	out := MatrixNew(a.rows, 1)
 
 	outPtr := (*C.Elem)(&out.data[0])
 	aPtr := (*C.Elem)(&a.data[0])
@@ -174,7 +210,6 @@ func MatrixMulVec(a *Matrix, b *Matrix) *Matrix {
 
 	C.matMulVec(outPtr, aPtr, bPtr, aRows, aCols)
 
-	out.DropLastRows(8)
 	return out
 }
 
@@ -190,13 +225,14 @@ func MatrixMulVecPacked(a *Matrix, b *Matrix, basis, compression uint64) *Matrix
 		panic("Must use hard-coded values!")
 	}
 
-	out := MatrixNew(a.rows, 1)
+	out := MatrixNew(a.rows+8, 1)
 
 	outPtr := (*C.Elem)(&out.data[0])
 	aPtr := (*C.Elem)(&a.data[0])
 	bPtr := (*C.Elem)(&b.data[0])
 
 	C.matMulVecPacked(outPtr, aPtr, bPtr, C.size_t(a.rows), C.size_t(a.cols))
+	out.DropLastRows(8)
 
 	return out
 }
@@ -266,23 +302,22 @@ func (m *Matrix) Expand(mod uint64, delta uint64) {
 	m.data = n.data
 }
 
-func (m *Matrix) TransposeAndExpandAndConcatCols(mod uint64, delta uint64, concat uint64) {
-	if m.rows % concat != 0 {
-		panic("Bad input!")
-	}
+func (m *Matrix) TransposeAndExpandAndConcatColsAndSquish(mod, delta, concat, basis, d uint64) {
+        if m.rows % concat != 0 {
+                panic("Bad input!")
+        }
 
-        n := MatrixNew(m.cols*delta*concat, m.rows/concat)
-        modulus := C.Elem(mod)
+        n := MatrixZeros(m.cols*delta*concat, (m.rows/concat+d-1)/d)
 
         for j := uint64(0); j < m.rows; j++ {
                 for i := uint64(0); i < m.cols; i++ {
-                        val := m.data[i+j*m.cols]
+                        val := uint64(m.data[i+j*m.cols])
                         for f := uint64(0); f < delta; f++ {
-                                new_val := val % modulus
-				r := (i*delta+f) + m.cols*delta*(j % concat)
-				c := j / concat
-                                n.data[r*n.cols+c] = new_val
-                                val /= modulus
+                                new_val := val % mod
+                                r := (i*delta+f) + m.cols*delta*(j % concat)
+                                c := j / concat
+                                n.data[r*n.cols+c/d] += C.Elem(new_val << (basis * (c%d)))
+                                val /= mod
                         }
                 }
         }

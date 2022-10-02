@@ -8,6 +8,9 @@ void transpose(Elem *out, const Elem *in, size_t rows, size_t cols);
 void matMul(Elem *out, const Elem *a, const Elem *b,
     size_t aRows, size_t aCols, size_t bCols);
 
+void matMulPacked(Elem *out, const Elem *a, const Elem *b,
+    size_t aRows, size_t aCols, size_t bCols);
+
 void matMulVec(Elem *out, const Elem *a, const Elem *b,
     size_t aRows, size_t aCols);
 
