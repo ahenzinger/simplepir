@@ -20,17 +20,53 @@ void matMul(Elem *out, const Elem *a, const Elem *b,
   }
 }
 
-void matMulPacked(Elem *out, const Elem *a, const Elem *b,
-    size_t aRows, size_t aCols, size_t bCols)
+void matMulTransposedPacked(Elem *out, const Elem *a, const Elem *b,
+    size_t aRows, size_t aCols, size_t bRows, size_t bCols)
 {
-  Elem val;
-  for (size_t i = 0; i < aRows; i += 1) {
-    for (size_t k = 0; k < aCols; k += 1) {
+  Elem val, tmp, db, val2, val3;
+  size_t ind1, ind2;
 
-      for (size_t j = 0; j < bCols; j++) {
+  /*for (size_t i = 0; i < aRows; i += 1) {
+    for (size_t k = 0; k < aCols; k += 1) {
+      for (size_t j = 0; j < bRows; j++) {
         for (int m = 0; m < COMPRESSION; m++) {
-	  val = (a[aCols*i+k] >> (m*BASIS)) & MASK;
-	  out[bCols*i+j] += val*b[(k*COMPRESSION+m)*bCols+j];
+          val = (a[aCols*i+k] >> (m*BASIS)) & MASK;
+          out[bRows*i+j] += val*b[(k*COMPRESSION+m)+j*bCols];
+        }
+      }
+    }
+  }*/
+
+  if (aRows > aCols) { // when the database rows are long
+    ind1 = 0;
+    for (size_t i = 0; i < aRows; i += 1) {
+      for (size_t k = 0; k < aCols; k += 1) {
+        db = a[ind1++];
+    	val = db & MASK;
+    	val2 = (db >> BASIS) & MASK;
+    	val3 = (db >> BASIS2) & MASK;
+        for (size_t j = 0; j < bRows; j += 1) {
+	  out[bRows*i+j] += val*b[k*COMPRESSION+j*bCols];
+	  out[bRows*i+j] += val2*b[k*COMPRESSION+j*bCols+1];
+	  out[bRows*i+j] += val3*b[k*COMPRESSION+j*bCols+2];
+	}
+      }
+    }
+  } else { // when the database rows are short
+    for (size_t j = 0; j < bRows; j += 8) {
+      for (size_t i = 0; i < aRows; i += 1) {
+        for (size_t j1 = 0; j1 < 8; j1 += 1) {
+          tmp = 0;
+          ind2 = 0;
+          for (size_t k = 0; k < aCols; k += 1) {
+            db = a[aCols*i+k];
+            for (int m = 0; m < COMPRESSION; m++) {
+              val = (db >> (m*BASIS)) & MASK;
+              tmp += val*b[ind2+(j+j1)*bCols];
+              ind2++;
+            }
+          }
+          out[bRows*i+j+j1] = tmp;
 	}
       }
     }

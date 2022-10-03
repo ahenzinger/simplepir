@@ -90,7 +90,13 @@ func (pi *DoublePIR) Setup(DB *Database, shared State, p Params) (State, Msg) {
 	H1.Add(p.p / 2)
 	H1.Squish(10, 3)
 
-	return MakeState(H1), MakeMsg(H2)
+	A2_copy := A2.RowsDeepCopy(0, A2.rows) // deep copy whole matrix
+	if A2_copy.rows % 3 != 0 {
+                A2_copy.Concat(MatrixZeros(3-(A2_copy.rows%3), A2_copy.cols))
+        }
+	A2_copy.Transpose()
+
+	return MakeState(H1, A2_copy), MakeMsg(H2)
 }
 
 func (pi *DoublePIR) FakeSetup(DB *Database, p Params) (State, float64) {
@@ -106,7 +112,13 @@ func (pi *DoublePIR) FakeSetup(DB *Database, p Params) (State, float64) {
 	H1.Add(p.p / 2)
 	H1.Squish(10, 3)
 
-	return MakeState(H1), offline_download
+	A2_rows := p.l/info.x
+	if A2_rows % 3 != 0 {
+		A2_rows += (3-(A2_rows % 3))
+	}
+	A2_copy := MatrixRand(p.n, A2_rows, p.logq, 0)
+
+	return MakeState(H1, A2_copy), offline_download
 }
 
 func (pi *DoublePIR) Query(i uint64, shared State, p Params, info DBinfo) (State, Msg) {
@@ -149,7 +161,7 @@ func (pi *DoublePIR) Query(i uint64, shared State, p Params, info DBinfo) (State
 
 func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared State, p Params) Msg {
 	H1 := server.data[0]
-	A2 := shared.data[1]
+	A2_transpose := server.data[1]
 
 	a1 := new(Matrix)
 	num_queries := uint64(len(query.data))
@@ -168,9 +180,7 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 	}
 
 	a1.TransposeAndExpandAndConcatColsAndSquish(p.p, p.delta(), DB.info.x, 10, 3)
-	//a1.TransposeAndExpandAndConcatCols(p.p, p.delta(), DB.info.x)
-	//a1.Squish(10, 3)
-        h1 := MatrixMulPacked(a1, A2, 10, 3)
+        h1 := MatrixMulTransposedPacked(a1, A2_transpose, 10, 3)
 	msg := MakeMsg(h1)
 
 	for _, q := range query.data {

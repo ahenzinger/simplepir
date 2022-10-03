@@ -155,38 +155,23 @@ func MatrixMul(a *Matrix, b *Matrix) *Matrix {
 	return out
 }
 
-func MatrixMulPacked(a *Matrix, b *Matrix, basis, compression uint64) *Matrix {
-        if b.cols == 1 {
-                return MatrixMulVecPacked(a, b, basis, compression)
-        }
-        if (a.cols*compression < b.rows) || (a.cols*compression > b.rows+compression) {
-                fmt.Printf("%d-by-%d vs. %d-by-%d\n", a.rows, a.cols, b.rows, b.cols)
-                panic("Dimension mismatch")
-        }
+func MatrixMulTransposedPacked(a *Matrix, b *Matrix, basis, compression uint64) *Matrix {
+        fmt.Printf("%d-by-%d vs. %d-by-%d\n", a.rows, a.cols, b.cols, b.rows)
         if compression != 3 && basis != 10 {
                 panic("Must use hard-coded values!")
         }
 
-        out := MatrixZeros(a.rows, b.cols)
-
-	added := false
-	if b.rows % 3 != 0 {
-		added = true
-		b.Concat(MatrixZeros(3, b.cols))
-	}
+        out := MatrixZeros(a.rows, b.rows)
 
         outPtr := (*C.Elem)(&out.data[0])
         aPtr := (*C.Elem)(&a.data[0])
         bPtr := (*C.Elem)(&b.data[0])
         aRows := C.size_t(a.rows)
-        aCols := C.size_t(a.cols)
+	aCols := C.size_t(a.cols)
+        bRows := C.size_t(b.rows)
         bCols := C.size_t(b.cols)
 
-        C.matMulPacked(outPtr, aPtr, bPtr, aRows, aCols, bCols)
-
-	if added {
-		b.DropLastRows(3)
-	}
+        C.matMulTransposedPacked(outPtr, aPtr, bPtr, aRows, aCols, bRows, bCols)
 
 	return out
 }
