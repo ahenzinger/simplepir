@@ -341,7 +341,7 @@ func BenchmarkSimplePirVaryingDB(b *testing.B) {
 		var offline_cs []float64
 		var online_cs []float64
 
-		for j := 0; j < 1; j++ {
+		for j := 0; j < 5; j++ {
 			tput, _, offline_c, online_c := RunFakePIR(&pir, DB, p, []uint64{i}, nil, false)
 			tputs = append(tputs, tput)
 			offline_cs = append(offline_cs, offline_c)
@@ -394,7 +394,7 @@ func BenchmarkDoublePirVaryingDB(b *testing.B) {
 		var offline_cs []float64
 		var online_cs []float64
 
-		for j := 0; j < 1; j++ {
+		for j := 0; j < 5; j++ {
 			tput, _, offline_c, online_c := RunFakePIR(&pir, DB, p, []uint64{i}, nil, false)
 			tputs = append(tputs, tput)
 			offline_cs = append(offline_cs, offline_c)
@@ -456,7 +456,7 @@ func BenchmarkSimplePirBatchLarge(b *testing.B) {
 	records := []string{"Batch_sz", "Good_tput", "Good_std_dev", "Num_successful_queries", "Tput"}
 	writer.Write(records)
 
-	for trial := 0; trial <= 5; trial += 1 {
+	for trial := 0; trial <= 10; trial += 1 {
 		batch_sz := (1 << trial)
 		var query []uint64
 		for j := 0; j < batch_sz; j++ {
@@ -522,7 +522,7 @@ func BenchmarkDoublePirBatchLarge(b *testing.B) {
 	records := []string{"Batch_sz", "Good_tput", "Good_std_dev", "Num_successful_queries", "Tput"}
 	writer.Write(records)
 
-	for trial := 0; trial <= 5; trial += 1 {
+	for trial := 0; trial <= 10; trial += 1 {
 		batch_sz := (1 << trial)
 		var query []uint64
 		for j := 0; j < batch_sz; j++ {
