@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 	"runtime/pprof"
 	"time"
+//	"math"
 )
 
 // Defines the interface for PIR with preprocessing schemes
@@ -37,6 +38,7 @@ type PIR interface {
 func RunFakePIR(pi PIR, DB *Database, p Params, i []uint64, 
                 f *os.File, profile bool) (float64, float64, float64, float64) {
 	fmt.Printf("Executing %s\n", pi.Name())
+	//fmt.Printf("Memory limit: %d\n", debug.SetMemoryLimit(math.MaxInt64))
 	debug.SetGCPercent(-1)
 
 	num_queries := uint64(len(i))
@@ -93,6 +95,7 @@ func RunFakePIR(pi PIR, DB *Database, p Params, i []uint64,
 // Run full PIR scheme (offline + online phases).
 func RunPIR(pi PIR, DB *Database, p Params, i []uint64) (float64, float64) {
 	fmt.Printf("Executing %s\n", pi.Name())
+	//fmt.Printf("Memory limit: %d\n", debug.SetMemoryLimit(math.MaxInt64))
 	debug.SetGCPercent(-1)
 
 	num_queries := uint64(len(i))
