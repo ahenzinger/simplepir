@@ -4,7 +4,7 @@ This repository contains the code for SimplePIR and DoublePIR, two high-throughp
 
 **Warning**: This code is a research prototype.
 
-> We present SimplePIR, the fastest private information retrieval (PIR) scheme known to date. SimplePIR is a single-server PIR scheme, whose security holds under the learning-with-errors assumption. To answer a client’s PIR query, the SimplePIR server performs one 32-bit multiplication and one 32-bit addition per database byte. SimplePIR achieves 6.5 GB/s/core server throughput, which is 7% faster than the fastest two-server PIR schemes (that require non-colluding servers). SimplePIR has relatively large communication costs: to make queries to a 1 GB database, the client must download a 124 MB “hint” about the database contents; thereafter, the client may make an unbounded number of queries, each requiring 242 KB of communication. We present a second single-server scheme, DoublePIR, that shrinks the hint to 16 MB at the cost of slightly higher per-query communication (345 KB) and slightly lower throughput (5.2 GB/s/core).
+> We present SimplePIR, the fastest single-server private information retrieval scheme known to date. SimplePIR’s security holds under the learning-with-errors assumption. To answer a client’s query, the SimplePIR server performs fewer than one 32-bit multiplication and one 32-bit addition per database byte. SimplePIR achieves 10 GB/s/core server throughput, which approaches the memory bandwidth of the machine and the performance of the fastest two-server private-information-retrieval schemes (which require non-colluding servers). SimplePIR has relatively large communication costs: to make queries to a 1 GB database, the client must download a 121 MB "hint" about the database contents; thereafter, the client may make an unbounded number of queries, each requiring 242 KB of communication. We present a second single-server scheme, DoublePIR, that shrinks the hint to 16 MB at the cost of slightly higher per-query communication (345 KB) and slightly lower throughput (7.4 GB/s/core).
 
 SimplePIR and DoublePIR's performance, compared to other single-server PIR schemes, on a 1 GB database:
 > <img src="performance.png" width="500">
@@ -19,7 +19,7 @@ The `pir/` directory contains the code for SimplePIR and DoublePIR. In particula
 - `database.go`, which implements operations on databases to transform them to the format used by SimplePIR and DoublePIR.
 - `params.csv`, which contains the learning-with-errors parameters used in this work.
 
-The `eval/` directory contains scripts to generate Figure 8 from the paper.
+The `eval/` directory contains scripts to generate Figure 9 from the paper.
 
 ## Setup
 
@@ -70,12 +70,11 @@ For an example of how to call the SimplePIR and DoublePIR methods from code, see
 ## Citation
 
 ```
-@misc{cryptoeprint:2022/949,
+@inproceedings{cryptoeprint:2022/949,
       author = {Alexandra Henzinger and Matthew M. Hong and Henry Corrigan-Gibbs and Sarah Meiklejohn and Vinod Vaikuntanathan},
       title = {One Server for the Price of Two: Simple and Fast Single-Server Private Information Retrieval},
-      howpublished = {Cryptology ePrint Archive, Paper 2022/949},
-      year = {2022},
-      note = {\url{https://eprint.iacr.org/2022/949}},
+      booktitle = {USENIX Security},
+      year = {2023},
       url = {https://eprint.iacr.org/2022/949}
 }
 ```
