@@ -27,6 +27,10 @@ type Database struct {
 	data *Matrix
 }
 
+func (DB *Database) getInfo() {
+	return DB.info
+}
+
 func (DB *Database) Squish() {
 	fmt.Printf("Original DB dims: ")
 	DB.data.Dim()

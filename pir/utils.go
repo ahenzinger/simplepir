@@ -48,6 +48,14 @@ func MakeMsg(elems ...*Matrix) Msg {
 	return msg
 }
 
+func MakeMsgSlice(elems ...*Msg) MsgSlice {
+	slice := MsgSlice{}
+	for _, elem := range elems {
+		slice.data = append(slice.data, elem)
+	}
+	return slice
+}
+
 // Returns the i-th elem in the representation of m in base p.
 func Base_p(p, m, i uint64) uint64 {
 	for j := uint64(0); j < i; j++ {
