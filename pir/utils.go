@@ -48,7 +48,7 @@ func MakeMsg(elems ...*Matrix) Msg {
 	return msg
 }
 
-func MakeMsgSlice(elems ...*Msg) MsgSlice {
+func MakeMsgSlice(elems ...Msg) MsgSlice {
 	slice := MsgSlice{}
 	for _, elem := range elems {
 		slice.data = append(slice.data, elem)

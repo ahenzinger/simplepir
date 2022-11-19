@@ -27,7 +27,7 @@ type Database struct {
 	data *Matrix
 }
 
-func (DB *Database) getInfo() {
+func (DB *Database) GetInfo() DBinfo {
 	return DB.info
 }
 
