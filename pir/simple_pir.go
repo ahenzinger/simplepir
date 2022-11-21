@@ -55,8 +55,19 @@ func (pi *SimplePIR) GetBW(info DBinfo, p Params) {
 }
 
 func (pi *SimplePIR) Init(info DBinfo, p Params) State {
-	A := MatrixRand(p.m, p.n, p.logq, 0)
-	return MakeState(A)
+        A := MatrixRand(p.m, p.n, p.logq, 0)
+        return MakeState(A)
+}
+
+func (pi *SimplePIR) InitCompressed(info DBinfo, p Params) (State, CompressedState) {
+	seed := RandomPRGKey()
+        bufPrgReader = NewBufPRG(NewPRG(seed))
+	return pi.Init(info, p), MakeCompressedState(seed)
+}
+
+func (pi *SimplePIR) DecompressState(info DBinfo, p Params, comp CompressedState) State {
+	bufPrgReader = NewBufPRG(NewPRG(comp.seed))
+	return pi.Init(info, p)
 }
 
 func (pi *SimplePIR) Setup(DB *Database, shared State, p Params) (State, Msg) {

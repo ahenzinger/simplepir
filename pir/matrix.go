@@ -472,3 +472,13 @@ func (m *Matrix) Print() {
 		fmt.Printf("\n")
 	}
 }
+
+func (m *Matrix) PrintStart() {
+        fmt.Printf("%d-by-%d matrix:\n", m.rows, m.cols)
+        for i := uint64(0); i < 2; i++ {
+                for j := uint64(0); j < 2; j++ {
+                        fmt.Printf("%d ", m.data[i*m.cols+j])
+                }
+                fmt.Printf("\n")
+        }
+}

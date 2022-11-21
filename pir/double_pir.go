@@ -72,6 +72,17 @@ func (pi *DoublePIR) Init(info DBinfo, p Params) State {
 	return MakeState(A1, A2)
 }
 
+func (pi *DoublePIR) InitCompressed(info DBinfo, p Params) (State, CompressedState) {
+        seed := RandomPRGKey()
+        bufPrgReader = NewBufPRG(NewPRG(seed))
+        return pi.Init(info, p), MakeCompressedState(seed)
+}
+
+func (pi *DoublePIR) DecompressState(info DBinfo, p Params, comp CompressedState) State {
+        bufPrgReader = NewBufPRG(NewPRG(comp.seed))
+        return pi.Init(info, p)
+}
+
 func (pi *DoublePIR) Setup(DB *Database, shared State, p Params) (State, Msg) {
 	A1 := shared.data[0]
 	A2 := shared.data[1]

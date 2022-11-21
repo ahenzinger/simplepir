@@ -3,9 +3,12 @@ package pir
 import "math"
 import "fmt"
 
-// TODO: Change this to hold cryptogrphic keys only
 type State struct {
 	data []*Matrix
+}
+
+type CompressedState struct {
+	seed *PRGKey
 }
 
 type Msg struct {
@@ -37,6 +40,12 @@ func MakeState(elems ...*Matrix) State {
 	for _, elem := range elems {
 		st.data = append(st.data, elem)
 	}
+	return st
+}
+
+func MakeCompressedState(elem *PRGKey) CompressedState {
+	st := CompressedState{}
+	st.seed = elem
 	return st
 }
 
