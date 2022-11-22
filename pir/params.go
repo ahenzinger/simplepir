@@ -34,6 +34,22 @@ func (p *Params) Round(x uint64) uint64 {
 	return v % p.p
 }
 
+func (p *Params) Getm() uint64 {
+	return p.m
+}
+
+func (p *Params) Getl() uint64 {
+	return p.l
+}
+
+func (p *Params) Getp() uint64 {
+	return p.p
+}
+
+func (p *Params) Getlogq() uint64 {
+	return p.logq
+}
+
 func (p *Params) PickParams(doublepir bool, samples ...uint64) {
 	if p.n == 0 || p.logq == 0 {
 		panic("Need to specify n and q!")
