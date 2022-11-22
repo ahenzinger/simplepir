@@ -228,7 +228,7 @@ func InterleaveDBs(DBs []*Database, p *Params) *Database {
 
 	for i:=uint64(0); i<orig_l; i++ {
 		for j:=0; j<len(DBs); j++ {
-			D.data.Concat(DBs[j].Rows(i, 1))
+			D.data.Concat(DBs[j].data.Rows(i, 1))
 		}
 	}
 	return D
