@@ -223,8 +223,8 @@ func InterleaveDBs(DBs []*Database, p *Params) *Database {
 	}
 
 	orig_l := p.l
-	p.l *= len(DBs)
-	D := SetupDB(DBs[0].info.N, DBs[0].info.row_length * len(DBs), p)
+	p.l *= uint64(len(DBs))
+	D := SetupDB(DBs[0].info.N, DBs[0].info.row_length * uint64(len(DBs)), p)
 
 	for i:=uint64(0); i<orig_l; i++ {
 		for j:=0; j<len(DBs); j++ {
