@@ -54,6 +54,17 @@ func (pi *DoublePIR) PickParams(N, d, n, logq uint64) Params {
 	return Params{}
 }
 
+func (pi *DoublePIR) PickParamsGivenDimensions(l, m, n, logq uint64) Params {
+	p := Params{
+		n:    n,
+		logq: logq,
+		l:    l,
+                m:    m,
+	}
+        p.PickParams(true, l, m)
+        return p
+}
+
 func (pi *DoublePIR) GetBW(info DBinfo, p Params) {
 	offline_download := float64(p.delta()*info.x*p.n*p.n*p.logq) / (8.0 * 1024.0)
 	fmt.Printf("\t\tOffline download: %d KB\n", uint64(offline_download))

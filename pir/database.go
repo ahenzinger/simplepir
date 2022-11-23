@@ -216,20 +216,3 @@ func MakeDB(N, row_length uint64, p *Params, vals []uint64) *Database {
 
 	return D
 }
-
-func InterleaveDBs(DBs []*Database, p *Params) *Database {
-	if len(DBs) == 0 {
-		panic("Should not happen")
-	}
-
-	orig_l := p.l
-	p.l *= uint64(len(DBs))
-	D := SetupDB(DBs[0].info.N, DBs[0].info.row_length * uint64(len(DBs)), p)
-
-	for i:=uint64(0); i<orig_l; i++ {
-		for j:=0; j<len(DBs); j++ {
-			D.data.Concat(DBs[j].data.Rows(i, 1))
-		}
-	}
-	return D
-}

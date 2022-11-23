@@ -15,6 +15,7 @@ type PIR interface {
 	Name() string
 
 	PickParams(N, d, n, logq uint64) Params
+	PickParamsGivenDimensions(l, m, n, logq uint64) Params
 
 	GetBW(info DBinfo, p Params)
 

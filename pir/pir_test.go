@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"strings"
 )
 
 const LOGQ = uint64(32)
@@ -67,6 +68,42 @@ func TestDBLargeEntries(t *testing.T) {
 
 	for i := uint64(0); i < N; i++ {
 		if DB.GetElem(i) != (i + 1) {
+			panic("Failure")
+		}
+	}
+}
+
+func TestDBInterleaving(t *testing.T) {
+	N := uint64(16)
+	d := uint64(8)
+	numBytes := uint64(len([]byte("string 16")))
+
+	DBs := make([]*Database, numBytes)
+	pir := SimplePIR{}
+	p := pir.PickParams(N, d, uint64(1 << 10) /* n */, uint64(32) /* log q */)
+
+	for n:=uint64(0); n<numBytes; n++ {
+		val := make([]uint64, N)
+		for i:=uint64(0); i<N; i++ {
+			arr := []byte("string "+fmt.Sprint(i))
+			if uint64(len(arr)) > n {
+				val[i] = uint64(arr[n])
+			} else {
+				val[i] = 0
+			}
+		}
+		DBs[n] = MakeDB(N, d, &p, val) 
+	}
+
+	D := pir.ConcatDBs(DBs, &p)
+
+	for i:=uint64(0); i<N; i++ {
+		val := make([]byte, numBytes)
+		for n:=uint64(0); n<numBytes; n++ {
+			val[n] = byte(D.GetElem(i + N*n))
+		}
+		fmt.Printf("Got '%s' instead of '%s'\n", string(val), "string " + fmt.Sprint(i))
+		if strings.TrimRight(string(val), "\x00") != "string " + fmt.Sprint(i) {
 			panic("Failure")
 		}
 	}
