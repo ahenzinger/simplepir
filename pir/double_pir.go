@@ -90,13 +90,13 @@ func (pi *DoublePIR) InitCompressed(info DBinfo, p Params) (State, CompressedSta
 }
 
 func (pi *DoublePIR) DecompressState(info DBinfo, p Params, comp CompressedState) State {
-        bufPrgReader = NewBufPRG(NewPRG(comp.seed))
+        bufPrgReader = NewBufPRG(NewPRG(comp.Seed))
         return pi.Init(info, p)
 }
 
 func (pi *DoublePIR) Setup(DB *Database, shared State, p Params) (State, Msg) {
-	A1 := shared.data[0]
-	A2 := shared.data[1]
+	A1 := shared.Data[0]
+	A2 := shared.Data[1]
 
 	H1 := MatrixMul(DB.data, A1)
 	H1.Transpose()
@@ -147,8 +147,8 @@ func (pi *DoublePIR) Query(i uint64, shared State, p Params, info DBinfo) (State
 	i1 := (i / p.m) * (info.ne / info.x)
 	i2 := i % p.m
 
-	A1 := shared.data[0]
-	A2 := shared.data[1]
+	A1 := shared.Data[0]
+	A2 := shared.Data[1]
 
 	secret1 := MatrixRand(p.n, 1, p.logq, 0)
 	err1 := MatrixGaussian(p.m, 1)
@@ -174,24 +174,24 @@ func (pi *DoublePIR) Query(i uint64, shared State, p Params, info DBinfo) (State
 			query2.AppendZeros(info.squishing - ((p.l / info.x) % info.squishing))
 		}
 
-		state.data = append(state.data, secret2)
-		msg.data = append(msg.data, query2)
+		state.Data = append(state.Data, secret2)
+		msg.Data = append(msg.Data, query2)
 	}
 
 	return state, msg
 }
 
 func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared State, p Params) Msg {
-	H1 := server.data[0]
-	A2_transpose := server.data[1]
+	H1 := server.Data[0]
+	A2_transpose := server.Data[1]
 
 	a1 := new(Matrix)
-	num_queries := uint64(len(query.data))
+	num_queries := uint64(len(query.Data))
 	batch_sz := DB.data.rows / num_queries
 
 	last := uint64(0)
-	for batch, q := range query.data {
-		q1 := q.data[0]
+	for batch, q := range query.Data {
+		q1 := q.Data[0]
 		if batch == int(num_queries-1) {
 			batch_sz = DB.data.rows - last
 		}
@@ -205,14 +205,14 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
         h1 := MatrixMulTransposedPacked(a1, A2_transpose, 10, 3)
 	msg := MakeMsg(h1)
 
-	for _, q := range query.data {
+	for _, q := range query.Data {
 		for j := uint64(0); j < DB.info.ne/DB.info.x; j++ {
-			q2 := q.data[1+j]
+			q2 := q.Data[1+j]
 			a2 := MatrixMulVecPacked(H1, q2, 10, 3)
 			h2 := MatrixMulVecPacked(a1, q2, 10, 3)
 
-			msg.data = append(msg.data, a2)
-			msg.data = append(msg.data, h2)
+			msg.Data = append(msg.Data, a2)
+			msg.Data = append(msg.Data, h2)
 		}
 	}
 
@@ -221,26 +221,26 @@ func (pi *DoublePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 
 func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg, query Msg,
 	answer Msg, shared State, client State, p Params, info DBinfo) uint64 {
-	H2 := offline.data[0]
-	h1 := answer.data[0].RowsDeepCopy(0, answer.data[0].rows) // deep copy whole matrix 
-	secret1 := client.data[0]
+	H2 := offline.Data[0]
+	h1 := answer.Data[0].RowsDeepCopy(0, answer.Data[0].rows) // deep copy whole matrix 
+	secret1 := client.Data[0]
 
 	ratio := p.p/2
 	val1 := uint64(0)
 	for j := uint64(0); j<p.m; j++ {
-		val1 += ratio*query.data[0].Get(j,0)
+		val1 += ratio*query.Data[0].Get(j,0)
 	}
 	val1 %= (1<<p.logq)
 	val1 = (1<<p.logq)-val1
 
 	val2 := uint64(0)
 	for j := uint64(0); j<p.l/info.x; j++ {
-		val2 += ratio*query.data[1].Get(j,0)
+		val2 += ratio*query.Data[1].Get(j,0)
 	}
 	val2 %= (1<<p.logq)
 	val2 = (1<<p.logq)-val2
 
-	A2 := shared.data[1]
+	A2 := shared.Data[1]
 	if (A2.cols != p.n) || (h1.cols != p.n) {
 		panic("Should not happen!")
 	}
@@ -260,9 +260,9 @@ func (pi *DoublePIR) Recover(i uint64, batch_index uint64, offline Msg, query Ms
 	offset := (info.ne / info.x * 2) * batch_index // for batching
 	var vals []uint64
 	for i := uint64(0); i < info.ne/info.x; i++ {
-		a2 := answer.data[1+2*i+offset]
-		h2 := answer.data[2+2*i+offset]
-		secret2 := client.data[1+i]
+		a2 := answer.Data[1+2*i+offset]
+		h2 := answer.Data[2+2*i+offset]
+		secret2 := client.Data[1+i]
 		h2.Add(val2)
 
 		for j := uint64(0); j < info.x; j++ {

@@ -60,7 +60,7 @@ func RunFakePIR(pi PIR, DB *Database, p Params, i []uint64,
 	var query MsgSlice
 	for index, _ := range i {
 		_, q := pi.Query(i[index], shared_state, p, DB.info)
-		query.data = append(query.data, q)
+		query.Data = append(query.Data, q)
 	}
 	printTime(start)
 	online_comm := float64(query.size() * uint64(p.logq) / (8.0 * 1024.0))
@@ -127,7 +127,7 @@ func RunPIR(pi PIR, DB *Database, p Params, i []uint64) (float64, float64) {
 		index_to_query := i[index] + uint64(index)*batch_sz
 		cs, q := pi.Query(index_to_query, shared_state, p, DB.info)
 		client_state = append(client_state, cs)
-		query.data = append(query.data, q)
+		query.Data = append(query.Data, q)
 	}
 	runtime.GC()
 	printTime(start)
@@ -153,7 +153,7 @@ func RunPIR(pi PIR, DB *Database, p Params, i []uint64) (float64, float64) {
 	for index, _ := range i {
 		index_to_query := i[index] + uint64(index)*batch_sz
 		val := pi.Recover(index_to_query, uint64(index), offline_download, 
-		                  query.data[index], answer, shared_state,
+		                  query.Data[index], answer, shared_state,
 			          client_state[index], p, DB.info)
 
 		if DB.GetElem(index_to_query) != val {
@@ -203,7 +203,7 @@ func RunPIRCompressed(pi PIR, DB *Database, p Params, i []uint64) (float64, floa
                 index_to_query := i[index] + uint64(index)*batch_sz
                 cs, q := pi.Query(index_to_query, client_shared_state, p, DB.info)
                 client_state = append(client_state, cs)
-                query.data = append(query.data, q)
+                query.Data = append(query.Data, q)
         }
         runtime.GC()
         printTime(start)
@@ -229,7 +229,7 @@ func RunPIRCompressed(pi PIR, DB *Database, p Params, i []uint64) (float64, floa
         for index, _ := range i {
                 index_to_query := i[index] + uint64(index)*batch_sz
                 val := pi.Recover(index_to_query, uint64(index), offline_download,
-                                  query.data[index], answer, client_shared_state,
+                                  query.Data[index], answer, client_shared_state,
                                   client_state[index], p, DB.info)
 
                 if DB.GetElem(index_to_query) != val {

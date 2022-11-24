@@ -108,12 +108,12 @@ func (pi *SimplePIR) InitCompressed(info DBinfo, p Params) (State, CompressedSta
 }
 
 func (pi *SimplePIR) DecompressState(info DBinfo, p Params, comp CompressedState) State {
-	bufPrgReader = NewBufPRG(NewPRG(comp.seed))
+	bufPrgReader = NewBufPRG(NewPRG(comp.Seed))
 	return pi.Init(info, p)
 }
 
 func (pi *SimplePIR) Setup(DB *Database, shared State, p Params) (State, Msg) {
-	A := shared.data[0]
+	A := shared.Data[0]
 	H := MatrixMul(DB.data, A)
 
 	// map the database entries to [0, p] (rather than [-p/1, p/2]) and then
@@ -139,7 +139,7 @@ func (pi *SimplePIR) FakeSetup(DB *Database, p Params) (State, float64) {
 }
 
 func (pi *SimplePIR) Query(i uint64, shared State, p Params, info DBinfo) (State, Msg) {
-	A := shared.data[0]
+	A := shared.Data[0]
 
 	secret := MatrixRand(p.n, 1, p.logq, 0)
 	err := MatrixGaussian(p.m, 1)
@@ -157,18 +157,18 @@ func (pi *SimplePIR) Query(i uint64, shared State, p Params, info DBinfo) (State
 
 func (pi *SimplePIR) Answer(DB *Database, query MsgSlice, server State, shared State, p Params) Msg {
 	ans := new(Matrix)
-	num_queries := uint64(len(query.data)) // number of queries in the batch of queries
+	num_queries := uint64(len(query.Data)) // number of queries in the batch of queries
 	batch_sz := DB.data.rows / num_queries // how many rows of the database each query in the batch maps to
 
 	last := uint64(0)
 
 	// Run SimplePIR's answer routine for each query in the batch
-	for batch, q := range query.data {
+	for batch, q := range query.Data {
 		if batch == int(num_queries-1) {
 			batch_sz = DB.data.rows - last
 		}
 		a := MatrixMulVecPacked(DB.data.Rows(last, batch_sz),
-			q.data[0],
+			q.Data[0],
 			DB.info.basis,
 			DB.info.squishing)
 		ans.Concat(a)
@@ -180,14 +180,14 @@ func (pi *SimplePIR) Answer(DB *Database, query MsgSlice, server State, shared S
 
 func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, query Msg, answer Msg,
 	shared State, client State, p Params, info DBinfo) uint64 {
-	secret := client.data[0]
-	H := offline.data[0]
-	ans := answer.data[0]
+	secret := client.Data[0]
+	H := offline.Data[0]
+	ans := answer.Data[0]
 
 	ratio := p.p/2
 	offset := uint64(0);
 	for j := uint64(0); j<p.m; j++ {
-        	offset += ratio*query.data[0].Get(j,0)
+        	offset += ratio*query.Data[0].Get(j,0)
 	}
 	offset %= (1 << p.logq)
 	offset = (1 << p.logq)-offset

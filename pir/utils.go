@@ -4,32 +4,32 @@ import "math"
 import "fmt"
 
 type State struct {
-	data []*Matrix
+	Data []*Matrix
 }
 
 type CompressedState struct {
-	seed *PRGKey
+	Seed *PRGKey
 }
 
 type Msg struct {
-	data []*Matrix
+	Data []*Matrix
 }
 
 func (m *Msg) size() uint64 {
 	sz := uint64(0)
-	for _, d := range m.data {
+	for _, d := range m.Data {
 		sz += d.size()
 	}
 	return sz
 }
 
 type MsgSlice struct {
-	data []Msg
+	Data []Msg
 }
 
 func (m *MsgSlice) size() uint64 {
 	sz := uint64(0)
-	for _, d := range m.data {
+	for _, d := range m.Data {
 		sz += d.size()
 	}
 	return sz
@@ -38,21 +38,21 @@ func (m *MsgSlice) size() uint64 {
 func MakeState(elems ...*Matrix) State {
 	st := State{}
 	for _, elem := range elems {
-		st.data = append(st.data, elem)
+		st.Data = append(st.Data, elem)
 	}
 	return st
 }
 
 func MakeCompressedState(elem *PRGKey) CompressedState {
 	st := CompressedState{}
-	st.seed = elem
+	st.Seed = elem
 	return st
 }
 
 func MakeMsg(elems ...*Matrix) Msg {
 	msg := Msg{}
 	for _, elem := range elems {
-		msg.data = append(msg.data, elem)
+		msg.Data = append(msg.Data, elem)
 	}
 	return msg
 }
@@ -60,7 +60,7 @@ func MakeMsg(elems ...*Matrix) Msg {
 func MakeMsgSlice(elems ...Msg) MsgSlice {
 	slice := MsgSlice{}
 	for _, elem := range elems {
-		slice.data = append(slice.data, elem)
+		slice.Data = append(slice.Data, elem)
 	}
 	return slice
 }
