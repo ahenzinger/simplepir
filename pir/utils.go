@@ -15,10 +15,10 @@ type Msg struct {
 	Data []*Matrix
 }
 
-func (m *Msg) size() uint64 {
+func (m *Msg) Size() uint64 {
 	sz := uint64(0)
 	for _, d := range m.Data {
-		sz += d.size()
+		sz += d.Size()
 	}
 	return sz
 }
@@ -27,10 +27,10 @@ type MsgSlice struct {
 	Data []Msg
 }
 
-func (m *MsgSlice) size() uint64 {
+func (m *MsgSlice) Size() uint64 {
 	sz := uint64(0)
 	for _, d := range m.Data {
-		sz += d.size()
+		sz += d.Size()
 	}
 	return sz
 }

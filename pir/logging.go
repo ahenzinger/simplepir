@@ -13,7 +13,7 @@ func printTime(start time.Time) time.Duration {
 }
 
 func printRate(p Params, elapsed time.Duration, batch_sz int) float64 {
-	rate := math.Log2(float64((p.p))) * float64(p.l*p.m) * float64(batch_sz) /
+	rate := math.Log2(float64((p.P))) * float64(p.L*p.M) * float64(batch_sz) /
 		float64(8*1024*1024*elapsed.Seconds())
 	fmt.Printf("\tRate: %f MB/s\n", rate)
 	return rate
@@ -41,10 +41,10 @@ func writeToFile(p Params, rate, bw float64, filename string) {
 	w := bufio.NewWriter(f)
 	fmt.Fprintf(w,
 		"%d,%d,%d,%d,%f,%f\n",
-		int(math.Log2(float64(p.n))),
-		int(math.Log2(float64(p.l))),
-		int(math.Log2(float64(p.m))),
-		p.logq,
+		int(math.Log2(float64(p.N))),
+		int(math.Log2(float64(p.L))),
+		int(math.Log2(float64(p.M))),
+		p.Logq,
 		rate,
 		bw)
 	w.Flush()

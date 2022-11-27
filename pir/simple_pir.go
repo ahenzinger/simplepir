@@ -20,14 +20,14 @@ func (pi *SimplePIR) PickParams(N, d, n, logq uint64) Params {
 		l, m := ApproxSquareDatabaseDims(N, d, mod_p)
 
 		p := Params{
-			n:    n,
-			logq: logq,
-			l:    l,
-			m:    m,
+			N:    n,
+			Logq: logq,
+			L:    l,
+			M:    m,
 		}
 		p.PickParams(false, m)
 
-		if p.p < mod_p {
+		if p.P < mod_p {
 			if !found {
 				panic("Error; should not happen")
 			}
@@ -45,10 +45,10 @@ func (pi *SimplePIR) PickParams(N, d, n, logq uint64) Params {
 
 func (pi *SimplePIR) PickParamsGivenDimensions(l, m, n, logq uint64) Params {
 	p := Params{
-		n:    n,
-                logq: logq,
-                l:    l,
-                m:    m,
+		N:    n,
+                Logq: logq,
+                L:    l,
+                M:    m,
 	}
         p.PickParams(false, m)
         return p
@@ -61,43 +61,43 @@ func (pi *SimplePIR) ConcatDBs(DBs []*Database, p *Params) *Database {
                 panic("Should not happen")
         }
 
-        if DBs[0].info.N != p.l * p.m {
+        if DBs[0].Info.Num != p.L * p.M {
                 panic("Not yet implemented")
         }
 
-        rows := DBs[0].data.rows
+        rows := DBs[0].Data.Rows
         for j:=1; j<len(DBs); j++ {
-                if DBs[j].data.rows != rows {
+                if DBs[j].Data.Rows != rows {
                         panic("Bad input")
                 }
         }
 
         D := new(Database)
-        D.data = MatrixZeros(0, 0)
-        D.info = DBs[0].info
-        D.info.N *= uint64(len(DBs))
-        p.l *= uint64(len(DBs))
+        D.Data = MatrixZeros(0, 0)
+        D.Info = DBs[0].Info
+        D.Info.Num *= uint64(len(DBs))
+        p.L *= uint64(len(DBs))
 
 	for j:=0; j<len(DBs); j++ {
-		D.data.Concat(DBs[j].data.Rows(0, rows))
+		D.Data.Concat(DBs[j].Data.SelectRows(0, rows))
 	}
 
         return D
 }
 
 func (pi *SimplePIR) GetBW(info DBinfo, p Params) {
-	offline_download := float64(p.l*p.n*p.logq) / (8.0 * 1024.0)
+	offline_download := float64(p.L*p.N*p.Logq) / (8.0 * 1024.0)
 	fmt.Printf("\t\tOffline download: %d KB\n", uint64(offline_download))
 
-	online_upload := float64(p.m*p.logq) / (8.0 * 1024.0)
+	online_upload := float64(p.M*p.Logq) / (8.0 * 1024.0)
 	fmt.Printf("\t\tOnline upload: %d KB\n", uint64(online_upload))
 
-	online_download := float64(p.l*p.logq) / (8.0 * 1024.0)
+	online_download := float64(p.L*p.Logq) / (8.0 * 1024.0)
 	fmt.Printf("\t\tOnline download: %d KB\n", uint64(online_download))
 }
 
 func (pi *SimplePIR) Init(info DBinfo, p Params) State {
-        A := MatrixRand(p.m, p.n, p.logq, 0)
+        A := MatrixRand(p.M, p.N, p.Logq, 0)
         return MakeState(A)
 }
 
@@ -114,25 +114,25 @@ func (pi *SimplePIR) DecompressState(info DBinfo, p Params, comp CompressedState
 
 func (pi *SimplePIR) Setup(DB *Database, shared State, p Params) (State, Msg) {
 	A := shared.Data[0]
-	H := MatrixMul(DB.data, A)
+	H := MatrixMul(DB.Data, A)
 
 	// map the database entries to [0, p] (rather than [-p/1, p/2]) and then
 	// pack the database more tightly in memory, because the online computation
 	// is memory-bandwidth-bound
-	DB.data.Add(p.p / 2)
+	DB.Data.Add(p.P / 2)
 	DB.Squish()
 
 	return MakeState(), MakeMsg(H)
 }
 
 func (pi *SimplePIR) FakeSetup(DB *Database, p Params) (State, float64) {
-	offline_download := float64(p.l*p.n*uint64(p.logq)) / (8.0 * 1024.0)
+	offline_download := float64(p.L*p.N*uint64(p.Logq)) / (8.0 * 1024.0)
 	fmt.Printf("\t\tOffline download: %d KB\n", uint64(offline_download))
 
 	// map the database entries to [0, p] (rather than [-p/1, p/2]) and then
 	// pack the database more tightly in memory, because the online computation
 	// is memory-bandwidth-bound
-	DB.data.Add(p.p / 2)
+	DB.Data.Add(p.P / 2)
 	DB.Squish()
 
 	return MakeState(), offline_download
@@ -141,15 +141,15 @@ func (pi *SimplePIR) FakeSetup(DB *Database, p Params) (State, float64) {
 func (pi *SimplePIR) Query(i uint64, shared State, p Params, info DBinfo) (State, Msg) {
 	A := shared.Data[0]
 
-	secret := MatrixRand(p.n, 1, p.logq, 0)
-	err := MatrixGaussian(p.m, 1)
+	secret := MatrixRand(p.N, 1, p.Logq, 0)
+	err := MatrixGaussian(p.M, 1)
 	query := MatrixMul(A, secret)
 	query.MatrixAdd(err)
-	query.data[i%p.m] += C.Elem(p.Delta())
+	query.Data[i%p.M] += C.Elem(p.Delta())
 
 	// Pad the query to match the dimensions of the compressed DB
-	if p.m%info.squishing != 0 {
-		query.AppendZeros(info.squishing - (p.m % info.squishing))
+	if p.M%info.Squishing != 0 {
+		query.AppendZeros(info.Squishing - (p.M % info.Squishing))
 	}
 
 	return MakeState(secret), MakeMsg(query)
@@ -158,19 +158,19 @@ func (pi *SimplePIR) Query(i uint64, shared State, p Params, info DBinfo) (State
 func (pi *SimplePIR) Answer(DB *Database, query MsgSlice, server State, shared State, p Params) Msg {
 	ans := new(Matrix)
 	num_queries := uint64(len(query.Data)) // number of queries in the batch of queries
-	batch_sz := DB.data.rows / num_queries // how many rows of the database each query in the batch maps to
+	batch_sz := DB.Data.Rows / num_queries // how many rows of the database each query in the batch maps to
 
 	last := uint64(0)
 
 	// Run SimplePIR's answer routine for each query in the batch
 	for batch, q := range query.Data {
 		if batch == int(num_queries-1) {
-			batch_sz = DB.data.rows - last
+			batch_sz = DB.Data.Rows - last
 		}
-		a := MatrixMulVecPacked(DB.data.Rows(last, batch_sz),
+		a := MatrixMulVecPacked(DB.Data.SelectRows(last, batch_sz),
 			q.Data[0],
-			DB.info.basis,
-			DB.info.squishing)
+			DB.Info.Basis,
+			DB.Info.Squishing)
 		ans.Concat(a)
 		last += batch_sz
 	}
@@ -184,22 +184,22 @@ func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, query Ms
 	H := offline.Data[0]
 	ans := answer.Data[0]
 
-	ratio := p.p/2
+	ratio := p.P/2
 	offset := uint64(0);
-	for j := uint64(0); j<p.m; j++ {
+	for j := uint64(0); j<p.M; j++ {
         	offset += ratio*query.Data[0].Get(j,0)
 	}
-	offset %= (1 << p.logq)
-	offset = (1 << p.logq)-offset
+	offset %= (1 << p.Logq)
+	offset = (1 << p.Logq)-offset
 
-	row := i / p.m
+	row := i / p.M
 	interm := MatrixMul(H, secret)
 	ans.MatrixSub(interm)
 
 	var vals []uint64
 	// Recover each Z_p element that makes up the desired database entry
-	for j := row * info.ne; j < (row+1)*info.ne; j++ {
-		noised := uint64(ans.data[j]) + offset
+	for j := row * info.Ne; j < (row+1)*info.Ne; j++ {
+		noised := uint64(ans.Data[j]) + offset
 		denoised := p.Round(noised)
 		vals = append(vals, denoised)
 		//fmt.Printf("Reconstructing row %d: %d\n", j, denoised)
@@ -212,5 +212,5 @@ func (pi *SimplePIR) Recover(i uint64, batch_index uint64, offline Msg, query Ms
 func (pi *SimplePIR) Reset(DB *Database, p Params) {
 	// Uncompress the database, and map its entries to the range [-p/2, p/2].
 	DB.Unsquish()
-	DB.data.Sub(p.p / 2)
+	DB.Data.Sub(p.P / 2)
 }

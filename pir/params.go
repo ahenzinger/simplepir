@@ -10,48 +10,32 @@ import _ "embed"
 var lwe_params string
 
 type Params struct {
-	n     uint64  // LWE secret dimension
-	sigma float64 // LWE error distribution stddev
+	N     uint64  // LWE secret dimension
+	Sigma float64 // LWE error distribution stddev
 
-	l uint64 // DB height
-	m uint64 // DB width
+	L uint64 // DB height
+	M uint64 // DB width
 
-	logq uint64 // (logarithm of) ciphertext modulus
-	p    uint64 // plaintext modulus
+	Logq uint64 // (logarithm of) ciphertext modulus
+	P    uint64 // plaintext modulus
 }
 
 func (p *Params) Delta() uint64 {
-	return (1 << p.logq) / (p.p)
+	return (1 << p.Logq) / (p.P)
 }
 
 func (p *Params) delta() uint64 {
-	return uint64(math.Ceil(float64(p.logq) / math.Log2(float64(p.p))))
+	return uint64(math.Ceil(float64(p.Logq) / math.Log2(float64(p.P))))
 }
 
 func (p *Params) Round(x uint64) uint64 {
 	Delta := p.Delta()
 	v := (x + Delta/2) / Delta
-	return v % p.p
-}
-
-func (p *Params) Getm() uint64 {
-	return p.m
-}
-
-func (p *Params) Getl() uint64 {
-	return p.l
-}
-
-func (p *Params) Getp() uint64 {
-	return p.p
-}
-
-func (p *Params) Getlogq() uint64 {
-	return p.logq
+	return v % p.P
 }
 
 func (p *Params) PickParams(doublepir bool, samples ...uint64) {
-	if p.n == 0 || p.logq == 0 {
+	if p.N == 0 || p.Logq == 0 {
 		panic("Need to specify n and q!")
 	}
 
@@ -69,21 +53,21 @@ func (p *Params) PickParams(doublepir bool, samples ...uint64) {
 		logm, _ := strconv.ParseUint(line[1], 10, 64)
 		logq, _ := strconv.ParseUint(line[2], 10, 64)
 
-		if (p.n == uint64(1<<logn)) &&
+		if (p.N == uint64(1<<logn)) &&
 			(num_samples <= uint64(1<<logm)) &&
-			(p.logq == uint64(logq)) {
+			(p.Logq == uint64(logq)) {
 			sigma, _ := strconv.ParseFloat(line[3], 64)
-			p.sigma = sigma
+			p.Sigma = sigma
 
 			if doublepir {
 				mod, _ := strconv.ParseUint(line[6], 10, 64)
-				p.p = mod
+				p.P = mod
 			} else {
 				mod, _ := strconv.ParseUint(line[5], 10, 64)
-				p.p = mod
+				p.P = mod
 			}
 
-			if sigma == 0.0 || p.p == 0 {
+			if sigma == 0.0 || p.P == 0 {
 				panic("Params invalid!")
 			}
 
@@ -91,12 +75,12 @@ func (p *Params) PickParams(doublepir bool, samples ...uint64) {
 		}
 	}
 
-	fmt.Printf("Searched for %d, %d-by-%d, %d,\n", p.n, p.l, p.m, p.logq)
+	fmt.Printf("Searched for %d, %d-by-%d, %d,\n", p.N, p.L, p.M, p.Logq)
 	panic("No suitable params known!")
 }
 
 func (p *Params) PrintParams() {
 	fmt.Printf("Working with: n=%d; db size=2^%d (l=%d, m=%d); logq=%d; p=%d; sigma=%f\n",
-		p.n, int(math.Log2(float64(p.l))+math.Log2(float64(p.m))), p.l, p.m, p.logq,
-		p.p, p.sigma)
+		p.N, int(math.Log2(float64(p.L))+math.Log2(float64(p.M))), p.L, p.M, p.Logq,
+		p.P, p.Sigma)
 }
