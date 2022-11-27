@@ -1,6 +1,6 @@
 package pir
 
-// #cgo CFLAGS: -O3 -march=native -msse4.1 -maes -mavx2 -mavx
+// #cgo CFLAGS: -O3 -march=native
 // #include "pir.h"
 import "C"
 import "fmt"

@@ -1,6 +1,6 @@
 package pir
 
-// #cgo CFLAGS: -O3 -march=native -msse4.1 -maes -mavx2 -mavx
+// #cgo CFLAGS: -O3 -march=native
 // #include "pir.h"
 import "C"
 import "fmt"
@@ -332,8 +332,10 @@ func (m *Matrix) Contract(mod uint64, delta uint64) {
 	m.data = n.data
 }
 
-// Squishes the matrix by representing each group of 'delta' consecutive value
-// as a single database element, where each value uses 'basis' bits.
+// Compresses the matrix to store it in 'packed' form.
+// Specifically, this method squishes the matrix by representing each 
+// group of 'delta' consecutive values as a single database element, 
+// where each value uses 'basis' bits.
 func (m *Matrix) Squish(basis, delta uint64) {
 	n := MatrixZeros(m.rows, (m.cols+delta-1)/delta)
 
