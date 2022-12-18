@@ -28,16 +28,16 @@ type Database struct {
 }
 
 func (DB *Database) Squish() {
-	fmt.Printf("Original DB dims: ")
-	DB.Data.Dim()
+	//fmt.Printf("Original DB dims: ")
+	//DB.Data.Dim()
 
 	DB.Info.Basis = 10
 	DB.Info.Squishing = 3 
 	DB.Info.Cols = DB.Data.Cols
 	DB.Data.Squish(DB.Info.Basis, DB.Info.Squishing)
 
-	fmt.Printf("After squishing, with compression factor %d: ", DB.Info.Squishing)
-	DB.Data.Dim()
+	//fmt.Printf("After squishing, with compression factor %d: ", DB.Info.Squishing)
+	//DB.Data.Dim()
 
 	// Check that params allow for this compression
 	if (DB.Info.P > (1 << DB.Info.Basis)) || (DB.Info.Logq < DB.Info.Basis * DB.Info.Squishing) {
