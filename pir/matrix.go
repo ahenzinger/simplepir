@@ -107,6 +107,13 @@ func (a *Matrix) Add(val uint64) {
 	}
 }
 
+func (a *Matrix) AddAt(val, i, j uint64) {
+	if (i >= a.Rows) || (j >= a.Cols) {
+		panic("Out of bounds")
+	}
+	a.Set(a.Get(i, j) + val, i, j)
+}
+
 func (a *Matrix) MatrixSub(b *Matrix) {
 	if (a.Cols != b.Cols) || (a.Rows != b.Rows) {
 		fmt.Printf("%d-by-%d vs. %d-by-%d\n", a.Rows, a.Cols, b.Rows, b.Cols)
